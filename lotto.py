@@ -334,46 +334,27 @@ def add_letter(event):
         count_digits_6 += 1
 
 
-def jump_to_next_feld(active_11, active_22, active_33, active_44, active_55, active_66 ):
-    if not (active_11 or active_22 or active_33 or active_44 or active_66) and active_55:
+def jump_to_next_feld():
+    global active_1, active_2, active_3, active_4, active_5, active_6
+
+    if active_1:
         active_1 = False
+        active_2 = True 
+    elif active_2:
         active_2 = False
+        active_3 = True 
+    elif active_3:
         active_3 = False
+        active_4 = True 
+    elif active_4:
         active_4 = False
+        active_5 = True 
+    elif active_5:
         active_5 = False
         active_6 = True 
-
-    if not (active_11 or active_22 or active_33 or active_55 or active_66) and active_44:
-        active_1 = False
-        active_2 = False
-        active_3 = False
-        active_4 = False
-        active_5 = True
-        active_6 = False  
-
-    if not (active_11 or active_22 or active_44 or active_55 or active_66) and active_33:
-        active_1 = False
-        active_2 = False
-        active_3 = False
-        active_4 = True
-        active_5 = False
-        active_6 = False  
-
-    if not (active_11 or active_33 or active_44 or active_55 or active_66) and active_22:
-        active_1 = False
-        active_2 = False
-        active_3 = True
-        active_4 = False
-        active_5 = False
-        active_6 = False                    
-                        
-    if active_11 and not active_22 and not active_33 and not active_44 and not active_55 and not active_66:
-        active_1 = False
-        active_2 = True
-        active_3 = False
-        active_4 = False
-        active_5 = False
+    elif active_6:
         active_6 = False
+        active_1 = True
 
 
 def feld_zahl_1(active_1):
@@ -741,7 +722,7 @@ def main():
                     add_letter(event)
 
                 if event.key == pygame.K_TAB:
-                    jump_to_next_feld(active_1, active_2, active_3, active_4, active_5, active_6)
+                    jump_to_next_feld()
 
                 if event.key == pygame.K_SPACE:
                     if number_of_correct_number == 6:
