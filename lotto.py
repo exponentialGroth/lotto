@@ -129,18 +129,11 @@ def choose_correct_numbers():
 
 
 # Text fields
-correct_number_font = pygame.font.Font(None, 32)
-correct_number_text = "Gewinnerzahlen:"
-correct_number_rect = pygame.Rect(520, 150, 150, 33)
+CORRECT_NUMBER_FONT = pygame.font.Font(None, 50)
+CORRECT_NUMBER_HEADING = pygame.font.Font(None, 32).render("Gewinnerzahlen:", True, BLACK)
+correctNumSurfaces = []
 
 choose_correct_numbers()
-
-first_correct_number_text = (str(correct_numbers[0]))
-second_correct_number_text = (str(correct_numbers[1]))
-third_correct_number_text = (str(correct_numbers[2]))
-fourth_correct_number_text = (str(correct_numbers[3]))
-fifth_correct_number_text = (str(correct_numbers[4]))
-sixth_correct_number_text = (str(correct_numbers[5]))
 
 MONEY_FONT = pygame.font.SysFont('comicsans', 55)
 
@@ -153,35 +146,23 @@ def setup():
     global current_number
     global wheelTurns
     global status_rotate_wheel
-    global first_correct_number_text
-    global second_correct_number_text
-    global third_correct_number_text
-    global fourth_correct_number_text
-    global fifth_correct_number_text
-    global sixth_correct_number_text
     global status_add_money
     global activeInput
     global changingColorR, changingColorG, changingColorB
+    global correctNumSurfaces
 
     current_number = 14
     wheelTurns = 0
     status_rotate_wheel = False
     activeInput = 0
-
-    choose_correct_numbers()
-
-    first_correct_number_text = (str(correct_numbers[0]))
-    second_correct_number_text = (str(correct_numbers[1]))
-    third_correct_number_text = (str(correct_numbers[2]))
-    fourth_correct_number_text = (str(correct_numbers[3]))
-    fifth_correct_number_text = (str(correct_numbers[4]))
-    sixth_correct_number_text = (str(correct_numbers[5]))
-
     status_add_money = True
 
     changingColorR = 0
     changingColorG = 0
     changingColorB = 0
+
+    choose_correct_numbers()
+    correctNumSurfaces.clear()
 
 
 def count_correct_guesses():
@@ -231,25 +212,21 @@ def draw_final_wheel(number_of_the_wheel):
     WIN.blit(WHEEL_POINTER_IMAGE, (525, 322) )
 
 
-def draw_correct_numbers(number_of_wheel_rotations):
-    color_of_correct_number = RED
-    correct_number_font = pygame.font.Font(None,50)
-    correct_number_rect = pygame.Rect(606, 150 + 50 * number_of_wheel_rotations, 10, 30)
-    correct_number_text = (str(eval(f"correct_numbers[{int(number_of_wheel_rotations) - 1}]")))
-
-    if number_of_wheel_rotations == 0:
-        correct_number_text = "Gewinnerzahlen:"
-        correct_number_font = pygame.font.Font(None, 32)
-        correct_number_rect = pygame.Rect(520, 150 + 50 * number_of_wheel_rotations, 150, 33)
-        color_of_correct_number = BLACK
-    else:
+def create_correct_num_surfaces():
+    global correctNumSurfaces
+    for i in range(6):
+        color = RED
         for guess in (it.value for it in inputs):
-            if guess == correct_numbers[number_of_wheel_rotations - 1]:
-                color_of_correct_number = GREEN
+            if guess == correct_numbers[i]:
+                color = GREEN
                 break
-       
-    correct_number_surface = correct_number_font.render(correct_number_text, True, color_of_correct_number)
-    WIN.blit(correct_number_surface, (correct_number_rect.x + 5, correct_number_rect.y + 5))
+        correctNumSurfaces.append(CORRECT_NUMBER_FONT.render(str(correct_numbers[i]), True, color))
+        
+
+def draw_correct_numbers():
+    WIN.blit(CORRECT_NUMBER_HEADING, (520, 150))
+    for i, s in enumerate(correctNumSurfaces[:wheelTurns]):
+        WIN.blit(s, (606, 150 + 50 * (i+1)))
 
 
 def draw_end_message():
@@ -299,8 +276,8 @@ def draw_window():
     if current_number == correct_numbers[wheelTurns - 1]:
         draw_final_wheel(current_number)
 
-    for i in range(wheelTurns + 1):
-        draw_correct_numbers(i)
+
+    draw_correct_numbers()
 
     if wheelTurns == 6:
         if status_add_money:    
@@ -341,6 +318,8 @@ def main():
                     global status_rotate_wheel
                     status_rotate_wheel = True
                     activeInput = None
+                    if wheelTurns == 0:
+                        create_correct_num_surfaces()
                     
             if event.type == pygame.KEYDOWN:
                 if wheelTurns == 0:
