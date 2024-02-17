@@ -28,12 +28,6 @@ RECT_PASSIVE = pygame.Color('gray15')
 changingColorR = 0
 changingColorG = 0
 changingColorB = 0
-color_of_rect_1 = RECT_PASSIVE
-color_of_rect_2 = RECT_PASSIVE
-color_of_rect_3 = RECT_PASSIVE
-color_of_rect_4 = RECT_PASSIVE
-color_of_rect_5 = RECT_PASSIVE
-color_of_rect_6 = RECT_PASSIVE
 
 
 #WERTE
@@ -47,25 +41,6 @@ status_add_money = True
 frequency = 1000
 duration = 16
 
-
-#Auswählen der Felder für Zahleingabe
-active_1 = False
-active_2 = False
-active_3 = False
-active_4 = False
-active_5 = False
-active_6 = False
-
-#nur Eingeben einer maximal zweistelligen Zahl möglich
-count_digits_1 = 0
-count_digits_2 = 0
-count_digits_3 = 0
-count_digits_4 = 0
-count_digits_5 = 0
-count_digits_6 = 0
-
-# Geratene Zahlen
-guess = ["0", "0", "0", "0", "0", "0"]
 
 #Bilder
 cwd = Path.cwd()
@@ -93,6 +68,51 @@ BACKGROUND_IMAGE = pygame.image.load(image_path / "sunburst_background.jpg")
 BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (720, 720))
 
 
+INPUT_FONT = pygame.font.Font(None, 32)
+
+class InputField:
+    w = 80
+    h = 30
+    l = 50
+    y0 = 200
+    padding = 5
+    step = 50
+    value = None
+
+    def __init__(self, i) -> None:
+        self.index = i
+        self.rect = pygame.Rect(self.l, self.y0 + self.step * i, self.w, self.h)
+
+    def draw(self):
+        isCorrect = number_of_correct_number > 0 and correct_numbers[:number_of_correct_number].count(self.value) == 1
+        surface = INPUT_FONT.render(f'Zahl {self.index+1}: {self.value if self.value is not None else ""}', True, GREEN if isCorrect else BLACK)
+        self.rect.w = surface.get_width() + 2 * self.padding
+        WIN.blit(surface, (self.rect.x + self.padding, self.rect.y + self.padding))
+        pygame.draw.rect(WIN, RECT_ACTIVE if self.index == activeInput else RECT_PASSIVE, self.rect, width=2)
+
+    def add(self, character):
+        code = ord(character)
+        if not 48 <= code <= 57: return  # not a digit
+        if self.value is None:
+            if code == 48: return
+            self.value = code - 48
+        elif self.value <= 4:
+            self.value = 10 * self.value + code - 48
+
+    def delete(self):
+        if self.value is None: return
+        if self.value <= 9:
+            self.value = None
+        else:
+            self.value = int((self.value - (self.value % 10)) / 10)
+
+    def contains(self, coord):
+        return self.rect.collidepoint(coord)
+    
+
+inputs = [InputField(i) for i in range(6)]
+activeInput = 0
+
 
 def choose_correct_numbers(): 
     correct_number_1 = random.randint(1, 49)
@@ -117,31 +137,6 @@ def choose_correct_numbers():
 
 
 #Textfelder
-
-first_number_font = pygame.font.Font(None, 32)
-first_number_text = "Zahl 1: "
-first_number_rect = pygame.Rect(50, 200, 80, 30)
-
-second_number_font = pygame.font.Font(None, 32)
-second_number_text = "Zahl 2: "
-second_number_rect = pygame.Rect(50, 250, 80, 30)
-
-third_number_font = pygame.font.Font(None, 32)
-third_number_text = "Zahl 3: "
-third_number_rect = pygame.Rect(50, 300, 80, 30)
-
-fourth_number_font = pygame.font.Font(None, 32)
-fourth_number_text = "Zahl 4: "
-fourth_number_rect = pygame.Rect(50, 350, 80, 30)
-
-fifth_number_font = pygame.font.Font(None, 32)
-fifth_number_text = "Zahl 5: "
-fifth_number_rect = pygame.Rect(50, 400, 80, 30)
-
-sixth_number_font = pygame.font.Font(None, 32)
-sixth_number_text = "Zahl 6: "
-sixth_number_rect = pygame.Rect(50, 450, 80, 30)
-
 
 correct_number_font = pygame.font.Font(None, 32)
 correct_number_text = "Gewinnerzahlen:"
@@ -181,64 +176,24 @@ button_rotate_wheel_polygon = pygame.draw.polygon(WIN, BROWN, ((245, 585), (495,
 
 
 def setup():
-    global color_of_rect_1
-    global color_of_rect_2
-    global color_of_rect_3
-    global color_of_rect_4
-    global color_of_rect_5
-    global color_of_rect_6
     global current_number
     global number_of_correct_number
     global status_rotate_wheel
-    global count_digits_1
-    global count_digits_2
-    global count_digits_3
-    global count_digits_4
-    global count_digits_5
-    global count_digits_6
-    global guess
     global first_correct_number_text
     global second_correct_number_text
     global third_correct_number_text
     global fourth_correct_number_text
     global fifth_correct_number_text
     global sixth_correct_number_text
-    global first_number_text
-    global second_number_text
-    global third_number_text
-    global fourth_number_text
-    global fifth_number_text
-    global sixth_number_text
     global status_add_money
-    
-    color_of_rect_1 = RECT_PASSIVE
-    color_of_rect_2 = RECT_PASSIVE
-    color_of_rect_3 = RECT_PASSIVE
-    color_of_rect_4 = RECT_PASSIVE
-    color_of_rect_5 = RECT_PASSIVE
-    color_of_rect_6 = RECT_PASSIVE
+    global activeInput
 
     current_number = 14
     number_of_correct_number = 0
     status_rotate_wheel = False
-
-    count_digits_1 = 0
-    count_digits_2 = 0
-    count_digits_3 = 0
-    count_digits_4 = 0
-    count_digits_5 = 0
-    count_digits_6 = 0
-
-    guess = ["0", "0", "0", "0", "0", "0"]
+    activeInput = 0
 
     choose_correct_numbers()
-
-    first_number_text = "Zahl 1: "
-    second_number_text = "Zahl 2: "
-    third_number_text = "Zahl 3: "
-    fourth_number_text = "Zahl 4: "
-    fifth_number_text = "Zahl 5: "
-    sixth_number_text = "Zahl 6: "
 
     first_correct_number_text = (str(correct_numbers[0]))
     second_correct_number_text = (str(correct_numbers[1]))
@@ -252,227 +207,6 @@ def setup():
     CHANGING_COLOR_R = 0
     CHANGING_COLOR_G = 0
     CHANGING_COLOR_B = 0
-
-
-def del_letter():
-    global first_number_text
-    global count_digits_1
-    global second_number_text
-    global count_digits_2
-    global third_number_text
-    global count_digits_3
-    global fourth_number_text
-    global count_digits_4
-    global fifth_number_text
-    global count_digits_5
-    global sixth_number_text
-    global count_digits_6
-
-    if active_1 and count_digits_1 >= 0:
-        first_number_text = first_number_text[0:-1]
-        guess[0] = guess[0][:-1]
-        count_digits_1 -= 1
-    if active_2 and count_digits_2 >= 0:
-        second_number_text = second_number_text[0:-1]
-        guess[1] = guess[1][:-1]
-        count_digits_2 -= 1
-    if active_3 and count_digits_3 >= 0:
-        third_number_text = third_number_text[0:-1]
-        guess[2] = guess[2][:-1]
-        count_digits_3 -= 1
-    if active_4 and count_digits_4 >= 0:
-        fourth_number_text = fourth_number_text[0:-1]
-        guess[3] = guess[3][:-1]
-        count_digits_4 -= 1
-    if active_5 and count_digits_5 >= 0:
-        fifth_number_text = fifth_number_text[0:-1]
-        guess[4] = guess[4][:-1]
-        count_digits_5 -= 1
-    if active_6 and count_digits_6 >= 0:
-        sixth_number_text = sixth_number_text[0:-1]
-        guess[5] = guess[5][:-1]
-        count_digits_6 -= 1
-
-
-def add_letter(event):
-    global first_number_text
-    global second_number_text
-    global third_number_text
-    global fourth_number_text
-    global fifth_number_text
-    global sixth_number_text
-    global count_digits_1
-    global count_digits_2
-    global count_digits_3
-    global count_digits_4
-    global count_digits_5
-    global count_digits_6
-
-    if active_1 and count_digits_1 < 2:
-        first_number_text += event.unicode
-        guess[0] += str(event.unicode)
-        count_digits_1 += 1
-    if active_2 and count_digits_2 < 2:
-        second_number_text += event.unicode
-        guess[1] += str(event.unicode)
-        count_digits_2 += 1
-    if active_3 and count_digits_3 < 2:
-        third_number_text += event.unicode
-        guess[2] += str(event.unicode)
-        count_digits_3 += 1
-    if active_4 and count_digits_4 < 2:
-        fourth_number_text += event.unicode
-        guess[3] += str(event.unicode)
-        count_digits_4 += 1
-    if active_5 and count_digits_5 < 2:
-        fifth_number_text += event.unicode
-        guess[4] += str(event.unicode)
-        count_digits_5 += 1
-    if active_6 and count_digits_6 < 2:
-        sixth_number_text += event.unicode
-        guess[5] += str(event.unicode)
-        count_digits_6 += 1
-
-
-def jump_to_next_feld():
-    global active_1, active_2, active_3, active_4, active_5, active_6
-
-    if active_1:
-        active_1 = False
-        active_2 = True 
-    elif active_2:
-        active_2 = False
-        active_3 = True 
-    elif active_3:
-        active_3 = False
-        active_4 = True 
-    elif active_4:
-        active_4 = False
-        active_5 = True 
-    elif active_5:
-        active_5 = False
-        active_6 = True 
-    elif active_6:
-        active_6 = False
-        active_1 = True
-
-
-def feld_zahl_1(active_1):
-    if (correct_numbers[0] == int(guess[0]) and number_of_button_clicks >= 1) or ( correct_numbers[1] == int(guess[0]) and number_of_button_clicks >= 2) \
-    or ( correct_numbers[2] == int(guess[0]) and number_of_button_clicks >= 3) or ( correct_numbers[3] == int(guess[0]) and number_of_button_clicks >= 4) \
-    or ( correct_numbers[4] == int(guess[0]) and number_of_button_clicks >= 5) or ( correct_numbers[5] == int(guess[0]) and number_of_button_clicks == 6):
-        color_of_number_1 = GREEN
-    else:
-        color_of_number_1 = BLACK
-
-    number_one_surface = first_number_font.render(first_number_text, True, color_of_number_1)
-    WIN.blit(number_one_surface, (first_number_rect.x + 5, first_number_rect.y + 5))                       
-    if active_1:
-        color_of_rect_1 = RECT_ACTIVE
-    else:
-        color_of_rect_1 = RECT_PASSIVE
-    pygame.draw.rect(WIN, color_of_rect_1, first_number_rect, 2)
-    first_number_rect.w = max(80, number_one_surface.get_width() + 10)
-
-
-def feld_zahl_2(active_2):
-    if (correct_numbers[0] == int(guess[1]) and number_of_button_clicks >= 1) or ( correct_numbers[1] == int(guess[1]) and number_of_button_clicks >= 2) \
-    or ( correct_numbers[2] == int(guess[1]) and number_of_button_clicks >= 3) or ( correct_numbers[3] == int(guess[1]) and number_of_button_clicks >= 4) \
-    or ( correct_numbers[4] == int(guess[1]) and number_of_button_clicks >= 5) or ( correct_numbers[5] == int(guess[1]) and number_of_button_clicks == 6):
-        color_of_number_2 = GREEN
-    else:
-        color_of_number_2 = BLACK
-
-    number_two_surface = second_number_font.render(second_number_text, True, color_of_number_2)
-    WIN.blit(number_two_surface, (second_number_rect.x + 5, second_number_rect.y + 5))                       
-    if active_2:
-        color_of_rect_2 = RECT_ACTIVE
-    else:
-        color_of_rect_2 = RECT_PASSIVE
-    pygame.draw.rect(WIN, color_of_rect_2, second_number_rect, 2)
-    second_number_rect.w = max(80, number_two_surface.get_width() + 10)
-
-
-def feld_zahl_3(active_3):
-    if (correct_numbers[0] == int(guess[2]) and number_of_button_clicks >= 1) or ( correct_numbers[1] == int(guess[2]) and number_of_button_clicks >= 2) \
-    or ( correct_numbers[2] == int(guess[2]) and number_of_button_clicks >= 3) or ( correct_numbers[3] == int(guess[2]) and number_of_button_clicks >= 4) \
-    or ( correct_numbers[4] == int(guess[2]) and number_of_button_clicks >= 5) or ( correct_numbers[5] == int(guess[2]) and number_of_button_clicks >= 6):
-        color_of_number_3 = GREEN
-    else:
-        color_of_number_3 = BLACK
-
-    number_three_surface = third_number_font.render(third_number_text, True, color_of_number_3)
-    WIN.blit(number_three_surface, (third_number_rect.x + 5, third_number_rect.y + 5))                       
-    if active_3:
-        color_of_rect_3 = RECT_ACTIVE
-    else:
-        color_of_rect_3 = RECT_PASSIVE
-    pygame.draw.rect(WIN, color_of_rect_3, third_number_rect, 2)
-    third_number_rect.w = max(80, number_three_surface.get_width() + 10)
-
-    if active_3:
-        color_of_rect_3 = RECT_ACTIVE
-    else:
-        color_of_rect_3 = RECT_PASSIVE
-
-
-def feld_zahl_4(active_4):
-    if (correct_numbers[0] == int(guess[3]) and number_of_button_clicks >= 1) or ( correct_numbers[1] == int(guess[3]) and number_of_button_clicks >= 2) \
-    or ( correct_numbers[2] == int(guess[3]) and number_of_button_clicks >= 3) or ( correct_numbers[3] == int(guess[3]) and number_of_button_clicks >= 4) \
-    or ( correct_numbers[4] == int(guess[3]) and number_of_button_clicks >= 5) or ( correct_numbers[5] == int(guess[3]) and number_of_button_clicks >= 6):
-        color_of_number_4 = GREEN
-    else:
-        color_of_number_4 = BLACK
-
-    number_four_surface = fourth_number_font.render(fourth_number_text, True, color_of_number_4)
-    WIN.blit(number_four_surface, (fourth_number_rect.x + 5, fourth_number_rect.y + 5))                       
-    if active_4:
-        color_of_rect_4 = RECT_ACTIVE
-    else:
-        color_of_rect_4 = RECT_PASSIVE
-    pygame.draw.rect(WIN, color_of_rect_4, fourth_number_rect, 2)
-    fourth_number_rect.w = max(80, number_four_surface.get_width() + 10)
-
-
-def feld_zahl_5(active_5):
-    if (correct_numbers[0] == int(guess[4]) and number_of_button_clicks >= 1) or ( correct_numbers[1] == int(guess[4]) and number_of_button_clicks >= 2) \
-    or ( correct_numbers[2] == int(guess[4]) and number_of_button_clicks >= 3) or ( correct_numbers[3] == int(guess[4]) and number_of_button_clicks >= 4) \
-    or ( correct_numbers[4] == int(guess[4]) and number_of_button_clicks >= 5) or ( correct_numbers[5] == int(guess[4]) and number_of_button_clicks == 6):
-        color_of_number_5 = GREEN
-    else:
-        color_of_number_5 = BLACK
-
-    number_five_surface = fifth_number_font.render(fifth_number_text, True, color_of_number_5)
-    WIN.blit(number_five_surface, (fifth_number_rect.x + 5, fifth_number_rect.y + 5))                       
-    if active_5:
-        color_of_rect_5 = RECT_ACTIVE
-    else:
-        color_of_rect_5 = RECT_PASSIVE
-    pygame.draw.rect(WIN, color_of_rect_5, fifth_number_rect, 2)
-    fifth_number_rect.w = max(80, number_five_surface.get_width() + 10)
-
-
-def feld_zahl_6(active_6):
-    if (correct_numbers[0] == int(guess[5]) and number_of_button_clicks >= 1) or ( correct_numbers[1] == int(guess[5]) and number_of_button_clicks >= 2) \
-    or ( correct_numbers[2] == int(guess[5]) and number_of_button_clicks >= 3) or ( correct_numbers[3] == int(guess[5]) and number_of_button_clicks >= 4) \
-    or ( correct_numbers[4] == int(guess[5]) and number_of_button_clicks >= 5) or ( correct_numbers[5] == int(guess[5]) and number_of_button_clicks == 6):
-        color_of_number_6 = GREEN
-    else:
-        color_of_number_6 = BLACK
-
-    number_six_surface = sixth_number_font.render(sixth_number_text, True, color_of_number_6)
-    WIN.blit(number_six_surface, (sixth_number_rect.x + 5, sixth_number_rect.y + 5))                       
-    if active_6:
-        color_of_rect_6 = RECT_ACTIVE
-    else:
-        color_of_rect_6 = RECT_PASSIVE
-    pygame.draw.rect(WIN, color_of_rect_6, sixth_number_rect, 2)
-    sixth_number_rect.w = max(80, number_six_surface.get_width() + 10)
-
-    if active_6:
-        color_of_rect_6 = RECT_ACTIVE
-    else:
-        color_of_rect_6 = RECT_PASSIVE
 
 
 def button_rotate_wheel():
@@ -523,9 +257,10 @@ def draw_correct_numbers(number_of_wheel_rotations):
         correct_number_rect = pygame.Rect(520, 150 + 50 * number_of_wheel_rotations, 150, 33)
         color_of_correct_number = BLACK
     else:
-        for g in guess:
-            if int(g) == correct_numbers[number_of_wheel_rotations - 1]:
+        for guess in (it.value for it in inputs):
+            if guess == correct_numbers[number_of_wheel_rotations - 1]:
                 color_of_correct_number = MONEY_GREEN
+                break
        
     correct_number_surface = correct_number_font.render(correct_number_text, True, color_of_correct_number)
     WIN.blit(correct_number_surface, (correct_number_rect.x + 5, correct_number_rect.y + 5))
@@ -533,8 +268,11 @@ def draw_correct_numbers(number_of_wheel_rotations):
 
 def anzahl_correct_guesses():
     correct_guesses = 0
-    for zahl in guess:
-        correct_guesses += correct_numbers.count(int(zahl))
+    for guess in (it.value for it in inputs):
+        for correctNum in correct_numbers:
+            if guess == correctNum:
+                correct_guesses += 1
+                break
 
     return correct_guesses
 
@@ -568,7 +306,6 @@ def end_of_round():
     WIN.blit(text_3, (rect_3.x, rect_3.y))
 
     status_add_money = False
-    
 
 
 def draw_window():
@@ -595,16 +332,10 @@ def draw_window():
     WIN.blit(money_text, (GELDSCHEINSYMBOL.get_width() + 278, 55 ))
     pygame.display.update(250, 5, 200, 100)
 
-    feld_zahl_1(active_1)
-    feld_zahl_2(active_2)
-    feld_zahl_3(active_3)
-    feld_zahl_4(active_4)
-    feld_zahl_5(active_5)
-    feld_zahl_6(active_6)
+    for field in inputs: field.draw()
 
-    if 1 <= int(guess[0]) <= 49 and 1 <= int(guess[1]) <= 49 and 1 <= int(guess[2]) <= 49 and 1 <= int(guess[3]) <= 49 \
-                and 1 <= int(guess[4]) <= 49 and 1 <= int(guess[5]) <= 49 :
-                button_rotate_wheel()
+    if all([it.value for it in inputs]):
+        button_rotate_wheel()
 
     if status_rotate_wheel and number_of_correct_number < 6:
         rotate_wheel(current_number, eval("correct_numbers[" + str(number_of_correct_number) + "]"))
@@ -640,13 +371,7 @@ def main():
     clock = pygame.time.Clock()
     run = True
 
-    #Global declarations
-    global active_1
-    global active_2
-    global active_3
-    global active_4
-    global active_5
-    global active_6
+    global activeInput
 
     while run:
         clock.tick(FPS)
@@ -658,73 +383,25 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:               
                 #Auswählen der Felder für Zahleneingabe               
                 if number_of_correct_number == 0:
-                    if first_number_rect.collidepoint(event.pos):
-                        active_1 = True
-                        active_2 = False
-                        active_3 = False
-                        active_4 = False
-                        active_5 = False
-                        active_6 = False
-                    if second_number_rect.collidepoint(event.pos):
-                        active_2 = True
-                        active_1 = False
-                        active_3 = False
-                        active_4 = False
-                        active_5 = False
-                        active_6 = False                
-                    if third_number_rect.collidepoint(event.pos):
-                        active_3 = True
-                        active_1 = False
-                        active_2 = False
-                        active_4 = False
-                        active_5 = False
-                        active_6 = False 
-                    if fourth_number_rect.collidepoint(event.pos):
-                        active_4 = True
-                        active_1 = False
-                        active_2 = False
-                        active_3 = False
-                        active_5 = False
-                        active_6 = False
-                    if fifth_number_rect.collidepoint(event.pos):
-                        active_5 = True
-                        active_1 = False
-                        active_2 = False
-                        active_3 = False
-                        active_4 = False
-                        active_6 = False
-                    if sixth_number_rect.collidepoint(event.pos):
-                        active_6 = True
-                        active_1 = False
-                        active_2 = False
-                        active_3 = False
-                        active_4 = False
-                        active_5 = False
+                    for i in range(6):
+                        if inputs[i].contains(event.pos):
+                            activeInput = i
+                            break
                     
                 if button_rotate_wheel_polygon.collidepoint(event.pos):
                     global status_rotate_wheel
-                    
                     status_rotate_wheel = True
-                    active_6 = False
-                    active_1 = False
-                    active_2 = False
-                    active_3 = False
-                    active_4 = False
-                    active_5 = False
+                    activeInput = None
                     
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKSPACE:
-                    del_letter()
-
-                if event.key == pygame.K_0 or event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3 \
-                or event.key == pygame.K_4 or event.key == pygame.K_5 or event.key == pygame.K_6 or event.key == pygame.K_7 \
-                or event.key == pygame.K_7 or event.key == pygame.K_8 or event.key == pygame.K_9:
-                    add_letter(event)
-
-                if event.key == pygame.K_TAB:
-                    jump_to_next_feld()
-
-                if event.key == pygame.K_SPACE:
+                if number_of_correct_number == 0:
+                    if len(event.unicode) == 1:
+                        inputs[activeInput].add(event.unicode)
+                    if event.key == pygame.K_BACKSPACE:
+                        inputs[activeInput].delete()
+                    elif event.key == pygame.K_TAB:
+                        activeInput = (activeInput + 1) % 6
+                elif event.key == pygame.K_SPACE:
                     if number_of_correct_number == 6:
                         setup()
                         main()
