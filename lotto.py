@@ -2,6 +2,11 @@ import pygame
 import random
 from pathlib import Path
 
+random.seed()
+pygame.init()
+pygame.font.init()
+pygame.mixer.init()
+
 WIDTH, HEIGHT = 720, 720
 RANDOM_WHEEL_WIDTH, RANDOM_WHEEL_HEIGHT = 360, 360
 FPS = 60
@@ -14,14 +19,6 @@ BROWN = (163, 85, 13)
 YELLOW = (250, 207, 4)
 RECT_ACTIVE = pygame.Color('lightskyblue3')
 RECT_PASSIVE = pygame.Color('gray15')
-
-random.seed()
-pygame.init()
-pygame.font.init()
-pygame.mixer.init()
-WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.SRCALPHA)
-pygame.display.set_caption("Lotto")
-
 
 changingColorR = 0
 changingColorG = 0
@@ -60,7 +57,12 @@ BACKGROUND_IMAGE = pygame.image.load(image_path / "sunburst_background.jpg")
 BACKGROUND = pygame.transform.scale(BACKGROUND_IMAGE, (720, 720))
 
 
+START_BUTTON_RECT = pygame.rect.Rect(245, 585, 235, 45)
+START_BUTTON_SURFACE = pygame.font.Font(None, 50).render("RAD DREHEN", True, YELLOW)
+MONEY_FONT = pygame.font.SysFont('comicsans', 55)
 INPUT_FONT = pygame.font.Font(None, 32)
+CORRECT_NUMBER_FONT = pygame.font.Font(None, 50)
+CORRECT_NUMBER_HEADING = pygame.font.Font(None, 32).render("Gewinnerzahlen:", True, BLACK)
 
 class InputField:
     w = 80
@@ -104,6 +106,7 @@ class InputField:
 
 inputs = [InputField(i) for i in range(6)]
 activeInput = 0
+correctNumSurfaces = []
 
 
 def choose_correct_numbers(): 
@@ -126,20 +129,6 @@ def choose_correct_numbers():
 
     global correct_numbers
     correct_numbers = [correct_number_1, correct_number_2, correct_number_3, correct_number_4, correct_number_5, correct_number_6]
-
-
-# Text fields
-CORRECT_NUMBER_FONT = pygame.font.Font(None, 50)
-CORRECT_NUMBER_HEADING = pygame.font.Font(None, 32).render("Gewinnerzahlen:", True, BLACK)
-correctNumSurfaces = []
-
-choose_correct_numbers()
-
-MONEY_FONT = pygame.font.SysFont('comicsans', 55)
-
-button_rotate_wheel_font = pygame.font.Font(None, 50)
-button_rotate_wheel_text = "RAD DREHEN"
-button_rotate_wheel_polygon = pygame.draw.polygon(WIN, BROWN, ((245, 585), (495, 585), (235, 630), (485, 630)))
 
 
 def setup():
@@ -177,12 +166,8 @@ def count_correct_guesses():
 
 
 def draw_start_button():
-    button_rotate_wheel_font = pygame.font.Font(None, 50)
-    button_rotate_wheel_text = "RAD DREHEN"
-    button_rotate_wheel_polygon = pygame.draw.polygon(WIN, BROWN, ((245, 585), (495, 585), (235, 630), (485, 630)))
-    pygame.draw.polygon(WIN, BROWN, ((245, 585), (480, 585), (485, 630), (235, 630)))
-    button_rotate_wheel_surface = button_rotate_wheel_font.render(button_rotate_wheel_text, True, YELLOW)
-    WIN.blit(button_rotate_wheel_surface, (button_rotate_wheel_polygon.x + 8, button_rotate_wheel_polygon.y + 12))
+    pygame.draw.rect(WIN, BROWN, START_BUTTON_RECT)
+    WIN.blit(START_BUTTON_SURFACE, (WIDTH/2 - START_BUTTON_SURFACE.get_width()/2, 594))
 
 
 def rotate(surface, angle):
@@ -209,7 +194,7 @@ def rotate_wheel(number_before_rotation, number_after_rotation):
 def draw_final_wheel(number_of_the_wheel):
     FINAL_RANDOM_WHEEL, FINAL_RANDOM_WHEEL_RECT =  rotate(RANDOM_WHEEL, 360/49 * (number_of_the_wheel + 49 - 14.5))
     WIN.blit(FINAL_RANDOM_WHEEL, FINAL_RANDOM_WHEEL_RECT)
-    WIN.blit(WHEEL_POINTER_IMAGE, (525, 322) )
+    WIN.blit(WHEEL_POINTER_IMAGE, (525, 322))
 
 
 def create_correct_num_surfaces():
@@ -296,9 +281,10 @@ def draw_window():
 
 
 def main():
-    global activeInput
+    global activeInput, status_rotate_wheel
     clock = pygame.time.Clock()
     run = True
+    setup()
 
     while run:
         clock.tick(FPS)
@@ -314,8 +300,7 @@ def main():
                             activeInput = i
                             break
                     
-                if button_rotate_wheel_polygon.collidepoint(event.pos):
-                    global status_rotate_wheel
+                if START_BUTTON_RECT.collidepoint(event.pos):
                     status_rotate_wheel = True
                     activeInput = None
                     if wheelTurns == 0:
@@ -329,14 +314,15 @@ def main():
                         inputs[activeInput].delete()
                     elif event.key == pygame.K_TAB:
                         activeInput = (activeInput + 1) % 6
-                elif event.key == pygame.K_SPACE:
-                    if wheelTurns == 6:
-                        setup()
-                        main()
+                elif event.key == pygame.K_SPACE and wheelTurns == 6:
+                    main()
 
         draw_window()
     
     pygame.quit()
 
 
+
+WIN = pygame.display.set_mode((WIDTH, HEIGHT), pygame.SRCALPHA)
+pygame.display.set_caption("Lotto")
 main()
