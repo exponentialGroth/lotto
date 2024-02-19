@@ -12,6 +12,7 @@ RANDOM_WHEEL_WIDTH, RANDOM_WHEEL_HEIGHT = 360, 360
 FPS = 60
 COST = 5
 NUMBER_OF_ROTATIONS = 5
+STARTING_MONEY = 20
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 RED = (255,0,0)
@@ -23,7 +24,6 @@ RECT_ACTIVE = pygame.Color('lightskyblue3')
 RECT_PASSIVE = pygame.Color('gray15')
 END_MESSAGE_COLOR = (0, 0, 0)
 
-money = 20
 wheelTurns = 0
 status_rotate_wheel = False
 status_add_money = True  # False if the money has been added
@@ -67,7 +67,7 @@ INPUT_FONT = pygame.font.Font(None, 32)
 CORRECT_NUMBER_FONT = pygame.font.Font(None, 50)
 CORRECT_NUMBER_HEADING = pygame.font.Font(None, 32).render("Gewinnerzahlen:", True, BLACK)
 END_OF_ROUND_FONT = pygame.font.Font(None, 75)
-money_text = MONEY_FONT.render(" = " + str(money), True, GREEN)
+money_text = MONEY_FONT.render(" = " + str(STARTING_MONEY), True, GREEN)
 endMessages = [END_OF_ROUND_FONT.render(part, True, END_MESSAGE_COLOR) for part in ["", "Zahlen richtig geraten.", "SPACE zum erneut spielen"]]
 endMessageCoords = []
 
@@ -232,10 +232,12 @@ def draw_window():  # TODO: update only the changed parts of the screen
 
 
 def main():
-    global activeInput, status_rotate_wheel, rotated_wheel, rotated_wheel_rect, wheelTurns, status_add_money, money
+    global activeInput, status_rotate_wheel, rotated_wheel, rotated_wheel_rect, wheelTurns, status_add_money
     setup()
     clock = pygame.time.Clock()
 
+    money = STARTING_MONEY
+    wheel_position_0 = 14
     frames_since_rotation_start = 0
     total_frames: float
     a: float
@@ -252,7 +254,7 @@ def main():
 
         if status_rotate_wheel:
             if frames_since_rotation_start == 0:
-                current_number = 14 if wheelTurns == 0 else correct_numbers[wheelTurns-1]
+                current_number = wheel_position_0 if wheelTurns == 0 else correct_numbers[wheelTurns-1]
                 next_number = correct_numbers[wheelTurns]
                 total_frames = (next_number - current_number + 49 * NUMBER_OF_ROTATIONS) / (0.5)
                 a = 360/49 * ((next_number - current_number + 49 * NUMBER_OF_ROTATIONS) - total_frames) * 2 / ((total_frames/FPS) ** 2)
@@ -300,7 +302,8 @@ def main():
                     elif event.key == pygame.K_TAB:
                         activeInput = (activeInput + 1) % 6
                 elif event.key == pygame.K_SPACE and wheelTurns == 6:
-                    main()
+                    wheel_position_0 = correct_numbers[-1]
+                    setup()
 
         draw_window()
     
