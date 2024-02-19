@@ -19,10 +19,8 @@ BROWN = (163, 85, 13)
 YELLOW = (250, 207, 4)
 RECT_ACTIVE = pygame.Color('lightskyblue3')
 RECT_PASSIVE = pygame.Color('gray15')
+END_MESSAGE_COLOR = (0, 0, 0)
 
-changingColorR = 0
-changingColorG = 0
-changingColorB = 0
 money = 20
 current_number = 14
 wheelTurns = 0
@@ -63,6 +61,9 @@ MONEY_FONT = pygame.font.SysFont('comicsans', 55)
 INPUT_FONT = pygame.font.Font(None, 32)
 CORRECT_NUMBER_FONT = pygame.font.Font(None, 50)
 CORRECT_NUMBER_HEADING = pygame.font.Font(None, 32).render("Gewinnerzahlen:", True, BLACK)
+END_OF_ROUND_FONT = pygame.font.Font(None, 75)
+endMessages = [END_OF_ROUND_FONT.render(part, True, END_MESSAGE_COLOR) for part in ["", "Zahlen richtig geraten.", "SPACE zum erneut spielen"]]
+endMessageCoords = []
 
 class InputField:
     w = 80
@@ -137,7 +138,6 @@ def setup():
     global status_rotate_wheel
     global status_add_money
     global activeInput
-    global changingColorR, changingColorG, changingColorB
     global correctNumSurfaces
 
     current_number = 14
@@ -145,10 +145,6 @@ def setup():
     status_rotate_wheel = False
     activeInput = 0
     status_add_money = True
-
-    changingColorR = 0
-    changingColorG = 0
-    changingColorB = 0
 
     choose_correct_numbers()
     correctNumSurfaces.clear()
@@ -214,12 +210,14 @@ def draw_correct_numbers():
         WIN.blit(s, (606, 150 + 50 * (i+1)))
 
 
+def create_end_message():
+    global endMessageCoords
+    endMessages[0] = END_OF_ROUND_FONT.render("Du hast " + str(count_correct_guesses()), 1, END_MESSAGE_COLOR)
+    endMessageCoords = [(360 - line.get_width()/2, 330 + (i-1) * 60 - line.get_height()/2) for i, line in enumerate(endMessages)]
+
+
 def draw_end_message():
-    end_of_round_font = pygame.font.Font(None, 75)
-    parts_of_end_of_round_text = ["Du hast " + str(count_correct_guesses()) , "Zahlen richtig geraten.", "SPACE zum erneut spielen"]    
-    lines = [end_of_round_font.render(part, 1, (changingColorR, changingColorG, changingColorB)) for part in parts_of_end_of_round_text]
-    coords = [(360 - line.get_width()/2, 360 + (i-1) * 60 - line.get_height()/2) for i, line in enumerate(lines)]
-    for line, pos in zip(lines, coords):
+    for line, pos in zip(endMessages, endMessageCoords):
         WIN.blit(line, pos)
 
 
@@ -229,9 +227,6 @@ def draw_window():
     global current_number
     global money
     global status_add_money
-    global changingColorR
-    global changingColorG
-    global changingColorB
 
     WIN.fill((BLACK))
     WIN.blit(BACKGROUND, (0,0))
@@ -269,14 +264,7 @@ def draw_window():
             money +=  3 * int(count_correct_guesses()) ** 3
             status_add_money = False
         draw_end_message()
-            
-        if changingColorR < 255:
-            changingColorR += 1
-        if changingColorR == 255 and changingColorB < 255:
-            changingColorB += 1
-        if changingColorB == 255 and changingColorG < 255:
-            changingColorG += 1
-
+        
     pygame.display.update()
 
 
@@ -285,7 +273,6 @@ def main():
     clock = pygame.time.Clock()
     run = True
     setup()
-
     while run:
         clock.tick(FPS)
 
@@ -305,6 +292,7 @@ def main():
                     activeInput = None
                     if wheelTurns == 0:
                         create_correct_num_surfaces()
+                        create_end_message()
                     
             if event.type == pygame.KEYDOWN:
                 if wheelTurns == 0:
