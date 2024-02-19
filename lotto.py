@@ -10,6 +10,8 @@ pygame.mixer.init()
 WIDTH, HEIGHT = 720, 720
 RANDOM_WHEEL_WIDTH, RANDOM_WHEEL_HEIGHT = 360, 360
 FPS = 60
+COST = 5
+NUMBER_OF_ROTATIONS = 5
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 RED = (255,0,0)
@@ -22,7 +24,6 @@ RECT_PASSIVE = pygame.Color('gray15')
 END_MESSAGE_COLOR = (0, 0, 0)
 
 money = 20
-current_number = 14
 wheelTurns = 0
 status_rotate_wheel = False
 status_add_money = True  # False if the money has been added
@@ -41,6 +42,8 @@ else:
 RANDOM_WHEEL_IMAGE = pygame.image.load(image_path / "random_wheel.png")
 RANDOM_WHEEL = pygame.transform.scale(RANDOM_WHEEL_IMAGE, (360,360))
 RANDOM_WHEEL_RECT = RANDOM_WHEEL.get_rect(center = (360,360))
+rotated_wheel = RANDOM_WHEEL
+rotated_wheel_rect = RANDOM_WHEEL_RECT
 
 WHEEL_OF_FORTUNE_SURROUNDING_IMAGE = pygame.image.load(image_path / "wheel_of_fortune_surrounding.png")
 WHEEL_OF_FORTUNE_SURROUNDING = pygame.transform.scale(WHEEL_OF_FORTUNE_SURROUNDING_IMAGE, (423,491))
@@ -62,6 +65,7 @@ INPUT_FONT = pygame.font.Font(None, 32)
 CORRECT_NUMBER_FONT = pygame.font.Font(None, 50)
 CORRECT_NUMBER_HEADING = pygame.font.Font(None, 32).render("Gewinnerzahlen:", True, BLACK)
 END_OF_ROUND_FONT = pygame.font.Font(None, 75)
+money_text = MONEY_FONT.render(" = " + str(money), True, GREEN)
 endMessages = [END_OF_ROUND_FONT.render(part, True, END_MESSAGE_COLOR) for part in ["", "Zahlen richtig geraten.", "SPACE zum erneut spielen"]]
 endMessageCoords = []
 
@@ -133,14 +137,12 @@ def choose_correct_numbers():
 
 
 def setup():
-    global current_number
     global wheelTurns
     global status_rotate_wheel
     global status_add_money
     global activeInput
     global correctNumSurfaces
 
-    current_number = 14
     wheelTurns = 0
     status_rotate_wheel = False
     activeInput = 0
@@ -172,27 +174,6 @@ def rotate(surface, angle):
     return rotated_wheel, rotated_wheel_rect
 
 
-def rotate_wheel(number_before_rotation, number_after_rotation):
-    time = 1 / FPS
-    number_of_rotations = 7
-    total_time = 7.3469 * (number_after_rotation - number_before_rotation + 49 * number_of_rotations) / (0.5 * 7.3469 * FPS)
-    a = (7.3469 * (number_after_rotation - number_before_rotation + 49 * number_of_rotations) - 7.3469 * FPS * total_time) * 2 / (total_time ** 2)
-    angle = 7.3469 * (number_before_rotation - 14 + 49 ) + 7.3469
-    while time < total_time:
-        RANDOM_WHEEL_ROTATED, RANDOM_WHEEL_ROTATED_RECT = rotate(RANDOM_WHEEL, angle)
-        WIN.blit(RANDOM_WHEEL_ROTATED, RANDOM_WHEEL_ROTATED_RECT)
-        WIN.blit(WHEEL_POINTER_IMAGE, (525, 322))
-        pygame.display.update(180, 180, 360, 360)
-        time += 1 / FPS
-        angle += (7.3469 + (a*time) / FPS)
-
-
-def draw_final_wheel(number_of_the_wheel):
-    FINAL_RANDOM_WHEEL, FINAL_RANDOM_WHEEL_RECT =  rotate(RANDOM_WHEEL, 360/49 * (number_of_the_wheel + 49 - 14.5))
-    WIN.blit(FINAL_RANDOM_WHEEL, FINAL_RANDOM_WHEEL_RECT)
-    WIN.blit(WHEEL_POINTER_IMAGE, (525, 322))
-
-
 def create_correct_num_surfaces():
     global correctNumSurfaces
     for i in range(6):
@@ -221,66 +202,78 @@ def draw_end_message():
         WIN.blit(line, pos)
 
 
-def draw_window():
-    global status_rotate_wheel
-    global wheelTurns
-    global current_number
-    global money
-    global status_add_money
+def update_money_text(money):
+    global money_text
+    money_text = MONEY_FONT.render(" = " + str(money), True, GREEN)
 
+
+def draw_window():  # TODO: update only the changed parts of the screen
     WIN.fill((BLACK))
     WIN.blit(BACKGROUND, (0,0))
     WIN.blit(WHEEL_OF_FORTUNE_SURROUNDING, WHEEL_OF_FORTUNE_SURROUNDING_RECT)
-    WIN.blit(RANDOM_WHEEL, RANDOM_WHEEL_RECT)
-    WIN.blit(WHEEL_POINTER_IMAGE, (525, 322) )
-
-    if status_rotate_wheel and wheelTurns < 6:
-        if wheelTurns == 0:
-            money -= 5
-    money_text = MONEY_FONT.render(" = "+ str(money), 1, GREEN)
     WIN.blit(MONEY_SYMBOL, (278, 45))
-    WIN.blit(money_text, (MONEY_SYMBOL.get_width() + 278, 55 ))
-    pygame.display.update(250, 5, 200, 100)
+    WIN.blit(money_text, (MONEY_SYMBOL.get_width() + 278, 55))
+    WIN.blit(rotated_wheel, rotated_wheel_rect)
+    WIN.blit(WHEEL_POINTER_IMAGE, (525, 322))
 
     for field in inputs: field.draw()
 
     if all([it.value for it in inputs]):
         draw_start_button()
 
-    if status_rotate_wheel and wheelTurns < 6:
-        rotate_wheel(current_number, correct_numbers[wheelTurns])
-        status_rotate_wheel = False
-        current_number = correct_numbers[wheelTurns]
-        wheelTurns += 1
-
-    if current_number == correct_numbers[wheelTurns - 1]:
-        draw_final_wheel(current_number)
-
-
     draw_correct_numbers()
 
     if wheelTurns == 6:
-        if status_add_money:    
-            money +=  3 * int(count_correct_guesses()) ** 3
-            status_add_money = False
         draw_end_message()
-        
+
     pygame.display.update()
 
 
 def main():
-    global activeInput, status_rotate_wheel
-    clock = pygame.time.Clock()
-    run = True
+    global activeInput, status_rotate_wheel, rotated_wheel, rotated_wheel_rect, wheelTurns, status_add_money, money
     setup()
+    clock = pygame.time.Clock()
+
+    frames_since_rotation_start = 0
+    total_frames: float
+    a: float
+    angle: float
+
+    run = True
     while run:
         clock.tick(FPS)
+
+        if wheelTurns == 6 and status_add_money:    
+            money += 3 * count_correct_guesses() ** 3
+            update_money_text(money)
+            status_add_money = False
+
+        if status_rotate_wheel:
+            if frames_since_rotation_start == 0:
+                current_number = 14 if wheelTurns == 0 else correct_numbers[wheelTurns-1]
+                next_number = correct_numbers[wheelTurns]
+                total_frames = (next_number - current_number + 49 * NUMBER_OF_ROTATIONS) / (0.5)
+                a = 360/49 * ((next_number - current_number + 49 * NUMBER_OF_ROTATIONS) - total_frames) * 2 / ((total_frames/FPS) ** 2)
+                angle = 360/49 * (current_number - 14 + 49 + 1)
+                frames_since_rotation_start = 1
+            if frames_since_rotation_start < total_frames:
+                rotated_wheel, rotated_wheel_rect = rotate(RANDOM_WHEEL, angle)
+                frames_since_rotation_start += 1
+                angle += 360/49 + a*frames_since_rotation_start/FPS**2
+            else:
+                rotated_wheel, rotated_wheel_rect = rotate(RANDOM_WHEEL, 360/49 * (correct_numbers[wheelTurns] + 49 - 14.5))
+                status_rotate_wheel = False
+                frames_since_rotation_start = 0
+                wheelTurns += 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run=False
+                continue
 
-            if event.type == pygame.MOUSEBUTTONDOWN:             
+            if status_rotate_wheel: continue
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:             
                 if wheelTurns == 0:
                     for i in range(6):
                         if inputs[i].contains(event.pos):
@@ -291,10 +284,12 @@ def main():
                     status_rotate_wheel = True
                     activeInput = None
                     if wheelTurns == 0:
+                        money -= COST
+                        update_money_text(money)
                         create_correct_num_surfaces()
                         create_end_message()
                     
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 if wheelTurns == 0:
                     if len(event.unicode) == 1:
                         inputs[activeInput].add(event.unicode)
