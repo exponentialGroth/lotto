@@ -44,6 +44,8 @@ RANDOM_WHEEL = pygame.transform.scale(RANDOM_WHEEL_IMAGE, (360,360))
 RANDOM_WHEEL_RECT = RANDOM_WHEEL.get_rect(center = (360,360))
 rotated_wheel = RANDOM_WHEEL
 rotated_wheel_rect = RANDOM_WHEEL_RECT
+rotated_wheel = RANDOM_WHEEL
+rotated_wheel_rect = RANDOM_WHEEL_RECT
 
 WHEEL_OF_FORTUNE_SURROUNDING_IMAGE = pygame.image.load(image_path / "wheel_of_fortune_surrounding.png")
 WHEEL_OF_FORTUNE_SURROUNDING = pygame.transform.scale(WHEEL_OF_FORTUNE_SURROUNDING_IMAGE, (423,491))
