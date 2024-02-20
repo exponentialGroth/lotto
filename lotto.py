@@ -116,26 +116,9 @@ active_input = 0
 correct_num_surfaces = []
 
 
-def choose_correct_numbers(): 
-    correct_number_1 = random.randint(1, 49)
-    correct_number_2 = random.randint(1,49)
-    while correct_number_1 == correct_number_2:
-        correct_number_2 = random.randint(1,49)
-    correct_number_3 = random.randint(1,49)
-    while correct_number_3 == correct_number_1 or correct_number_3 == correct_number_2:
-        correct_number_3 = random.randint(1,49)
-    correct_number_4 = random.randint(1,49)
-    while correct_number_4 == correct_number_1 or correct_number_4 == correct_number_2 or correct_number_4 == correct_number_3:
-        correct_number_4 = random.randint(1,49)
-    correct_number_5 = random.randint(1,49)
-    while correct_number_5 == correct_number_1 or correct_number_5 == correct_number_2 or correct_number_5 == correct_number_3 or correct_number_5 == correct_number_4:
-        correct_number_5 = random.randint(1,49)
-    correct_number_6 = random.randint(1,49)
-    while correct_number_6 == correct_number_1 or correct_number_6 == correct_number_2 or correct_number_6 == correct_number_3 or correct_number_6 == correct_number_4 or correct_number_6 == correct_number_5:
-        correct_number_6 = random.randint(1,49)
-
+def choose_correct_numbers():
     global correct_numbers
-    correct_numbers = [correct_number_1, correct_number_2, correct_number_3, correct_number_4, correct_number_5, correct_number_6]
+    correct_numbers = random.sample(range(1, 50), 6)
 
 
 def setup():
