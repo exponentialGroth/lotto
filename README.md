@@ -1,6 +1,6 @@
 # Lotto
 
-A game like Lotto using [Pygame](https://github.com/pygame/pygame).
+A number guessing game using [Pygame](https://github.com/pygame/pygame).
 
 <p align="center">
   <img alt="A Screenshot of the game" src="images/screenshot.png">
